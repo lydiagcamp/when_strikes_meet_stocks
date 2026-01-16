@@ -1,11 +1,11 @@
 # When Strikes Meet Stocks: The Complex Interplay Between Organized Labor and Employee Stock Ownership
 
 **Lydia Camp**  
-`https://lydiagcamp.github.io`
+[`https://lydiagcamp.github.io`](https://lydiagcamp.github.io)
 
 This repository contains the data and replication code for a paper examining the effect of union strength on employee stock ownership plan (ESOP) adoption. Using a staggered difference-in-differences design, the paper estimates the causal impact of right-to-work (RTW) laws on union strength and ESOP formation across U.S. states.
 
-The paper can be found at the link here. 
+The full paper can be found at the link here. 
 
 ## Additional Resources on Staggered Difference-in-Differences
 
