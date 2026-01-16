@@ -1,5 +1,4 @@
-# When Strikes Meet Stocks  
-## The Complex Interplay Between Organized Labor and Employee Stock Ownership
+# When Strikes Meet Stocks: The Complex Interplay Between Organized Labor and Employee Stock Ownership
 
 **Lydia Camp**  
 🌐 https://lydiagcamp.github.io
