@@ -7,12 +7,12 @@ This repository contains the data and replication code for a paper examining the
 
 ## Replication Materials
 - **Replication Code**  
-  [https://lydiagcamp.github.io/when_strikes_meet_stocks/](https://lydiagcamp.github.io/when_strikes_meet_stocks/)
+  [`https://lydiagcamp.github.io/when_strikes_meet_stocks/`](https://lydiagcamp.github.io/when_strikes_meet_stocks/)
 
 - **Full Paper**
 
 - **Interactive Map of ESOPs Across the U.S.**  
-  [Open the interactive map](https://lydia-camp.shinyapps.io/plans-map-us/)
+  [`Open the map here!`](https://lydia-camp.shinyapps.io/plans-map-us/)
 
 
 ## Additional Resources on Staggered Difference-in-Differences
