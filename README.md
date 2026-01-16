@@ -5,7 +5,9 @@
 
 This repository contains the data and replication code for a paper examining the effect of union strength on employee stock ownership plan (ESOP) adoption. Using a staggered difference-in-differences design, the paper estimates the causal impact of right-to-work (RTW) laws on union strength and ESOP formation across U.S. states.
 
-The full paper can be found at the link here. 
+The replication code is linked here: [`https://lydiagcamp.github.io/when_strikes_meet_stocks/`](https://lydiagcamp.github.io/when_strikes_meet_stocks/)
+
+And the full paper can be found here.
 
 ## Additional Resources on Staggered Difference-in-Differences
 
