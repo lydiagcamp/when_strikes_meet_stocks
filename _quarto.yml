@@ -2,14 +2,14 @@ project:
   type: website
   output-dir: docs
 
-format:
-  html:
-    theme: cosmo
-    toc: true
-    code-copy: true
-
 execute:
   eval: false
   echo: true
   warning: false
   message: false
+
+format:
+  html:
+    theme: cosmo
+    toc: true
+    code-copy: true
