@@ -1,0 +1,1242 @@
+---
+title: "Replication Code"
+subtitle: "'When Strikes Meet Stocks: The Complex Interplay Between Organized Labor and Employee Stock Ownership'"
+author: Lydia Camp
+date: last-modified
+format:
+  html:
+    theme: cosmo
+    toc: true
+    toc-depth: 3
+    code-fold: show
+    code-copy: true
+    code-overflow: wrap
+execute:
+  eval: false
+  echo: true
+  warning: false
+  message: false
+---
+
+# Load Packages and Import Data
+
+```{r}
+# Load Packages
+library(tidyverse)
+library(lmtest)
+library(sandwich)
+library(fixest)
+library(did)
+library(panelView)
+library(car)
+library(showtext)
+library(usmap)
+library(grid)
+library(data.table)
+library(FNN)
+library(stringr)
+library(plm)
+library(scales)
+library(sf)
+library(modelsummary)
+
+# Load Data
+setwd("your/working/directory")
+df <- read_csv("df.csv")
+
+# Exclude 1999
+state_year <- df |> 
+  filter(year != 1999) 
+```
+
+# Descriptive Statistics
+
+## Table 2: Descriptive Statistics
+
+```{r}
+options(scipen = 999)
+
+vars <- c(
+  "num_esops_form_5500",
+  "union_density",
+  "num_strikes",
+  "left_wing",
+  "ln_state_pop",
+  "ln_manufact",
+  "manufact_per",
+  "ln_real_median_in",
+  "ln_num_firms"
+)
+
+descriptives <- state_year |> 
+  summarise(across(all_of(vars),
+                   list(N = ~sum(!is.na(.)),
+                        Mean = ~mean(., na.rm=TRUE),
+                        SD = ~sd(., na.rm=TRUE),
+                        Min = ~min(., na.rm=TRUE),
+                        Max = ~max(., na.rm=TRUE)),
+                   .names = "{.col}_{.fn}")) |> 
+  as.list() |> 
+  stack() |> 
+  tidyr::separate(ind, into = c("Variable","Statistic"), sep = "_(?=[^_]+$)") |>  
+  tidyr::pivot_wider(names_from = Statistic, values_from = values)
+
+descriptives[-1] <- round(descriptives[-1], 3)
+
+descriptives
+```
+
+## Figure 2: Map of RTW Adoption
+
+```{r}
+rtw_years <- tribble(
+  ~abbr, ~year,
+  "AL", 1953, "AR", 1944, "AZ", 1946, "FL", 1944, "GA", 1947,
+  "IA", 1947, "ID", 1985, "IN", 2012, "KS", 1958, "KY", 2017,
+  "LA", 1976, "MS", 1954, "NC", 1947, "ND", 1947, "NE", 1946,
+  "NV", 1952, "OK", 2001, "SC", 1954, "SD", 1948, "TN", 1947,
+  "TX", 1947, "UT", 1955, "VA", 1947, "WI", 2015, "WV", 2016,
+  "WY", 1963, "MI", 2012
+) |>
+  mutate(
+    decade = cut(
+      year,
+      breaks = c(1939, 1949, 1959, 1979, 1999, 2009, 2019),
+      labels = c("1940-49", "1950-59", "1960-79", "1980-99", "2000-09", "2010-19"),
+      right = TRUE
+    )
+  )
+
+states_poly <- us_map(regions = "states") |>
+  st_as_sf(coords = c("x", "y"), crs = 4326, agr = "constant") |>
+  group_by(abbr) |>
+  summarise(geometry = st_union(st_geometry(.)), .groups = "drop") |>
+  st_as_sf()
+
+blues <- c(
+  "1940-49" = "#E8F1FF",
+  "1950-59" = "#B3CDEB",
+  "1960-79" = "#96C3E3",
+  "1980-99" = "#64AAD4",
+  "2000-09" = "#2E7CB8",
+  "2010-19" = "#084A8C"
+)
+
+sf_map <- states_poly |>
+  left_join(rtw_years, by = "abbr")
+
+labels_sf <- sf_map |>
+  filter(!is.na(year)) |>
+  mutate(
+    label_pt    = st_point_on_surface(st_geometry(.)),
+    label_color = if_else(decade == "2010-19", "white", "black")
+  )
+
+p <- ggplot(sf_map) +
+  geom_sf(aes(fill = decade), color = "black", linewidth = 0.25) +
+  geom_sf_text(
+    data = labels_sf,
+    aes(geometry = label_pt, label = year, color = label_color),
+    family = "Times New Roman",
+    size = 2.8
+  ) +
+  scale_fill_manual(
+    values = blues,
+    na.value = "white",
+    drop = FALSE,
+    name = NULL
+  ) +
+  scale_color_identity() +
+  coord_sf(datum = NA) +
+  theme_void(base_family = "Times New Roman") +
+  theme(
+    legend.position = c(0.05, 0.7)
+  )
+
+p
+```
+
+# OLS: Union Density -\> ESOPs
+
+```{r}
+# Sort the panel
+state_year <- state_year |> 
+  arrange(state, year)
+
+# Lag 4 years
+xm4 <- plm(
+  num_esops_form_5500 ~ 
+    lag(num_esops_form_5500, 4) +
+    lag(union_density, 4) +
+    lag(I(union_density^2), 4) +
+    lag(left_wing, 4) +
+    lag(manufact_per, 4) +
+    lag(log(real_median_in), 4) +
+    lag(log(state_pop), 4) +
+    lag(log(num_firms), 4),
+  data   = state_year,
+  index  = c("state", "year"),
+  model  = "within",
+  effect = "twoways"
+)
+
+# Lag 5 years
+xm5 <- plm(
+  num_esops_form_5500 ~ 
+     lag(num_esops_form_5500, 5) +
+    lag(union_density, 5) +
+    lag(I(union_density^2), 5) +
+    lag(left_wing, 5) +
+    lag(manufact_per, 5) +
+    lag(log(real_median_in), 5) +
+    lag(log(state_pop), 5) +
+    lag(log(num_firms), 5),
+  data   = state_year,
+  index  = c("state", "year"),
+  model  = "within",
+  effect = "twoways"
+)
+
+# Lag 6 years
+xm6 <- plm(
+  num_esops_form_5500 ~ 
+    lag(num_esops_form_5500, 6) +
+    lag(union_density, 6) +
+    lag(I(union_density^2), 6) +
+    lag(left_wing, 6) +
+    lag(manufact_per, 6) +
+    lag(log(real_median_in), 6) +
+    lag(log(state_pop), 6) +
+    lag(log(num_firms), 6),
+  data   = state_year,
+  index  = c("state", "year"),
+  model  = "within",
+  effect = "twoways"
+)
+```
+
+## Table A1: OLS Regressions
+
+```{r}
+# Create OLS Model Summary
+
+coef_map <- c(
+  "lag(union_density, 4)"      = "Union density",
+  "lag(union_density, 5)"      = "Union density",
+  "lag(union_density, 6)"      = "Union density",
+
+  "lag(I(union_density^2), 4)" = "Union density$^2$",
+  "lag(I(union_density^2), 5)" = "Union density$^2$",
+  "lag(I(union_density^2), 6)" = "Union density$^2$",
+
+  "lag(left_wing, 4)"          = "Left-wing government",
+  "lag(left_wing, 5)"          = "Left-wing government",
+  "lag(left_wing, 6)"          = "Left-wing government",
+
+  "lag(manufact_per, 4)"       = "Manufacturing employment share",
+  "lag(manufact_per, 5)"       = "Manufacturing employment share",
+  "lag(manufact_per, 6)"       = "Manufacturing employment share",
+
+  "lag(log(real_median_in), 4)" = "Log real median income",
+  "lag(log(real_median_in), 5)" = "Log real median income",
+  "lag(log(real_median_in), 6)" = "Log real median income",
+
+  "lag(log(state_pop), 4)"     = "Log population",
+  "lag(log(state_pop), 5)"     = "Log population",
+  "lag(log(state_pop), 6)"     = "Log population",
+
+  "lag(log(num_firms), 4)"     = "Log number of firms",
+  "lag(log(num_firms), 5)"     = "Log number of firms",
+  "lag(log(num_firms), 6)"     = "Log number of firms",
+  
+  "lag(num_esops_form_5500, 4)" = "LDV",
+  "lag(num_esops_form_5500, 5)" = "LDV",
+  "lag(num_esops_form_5500, 6)" = "LDV"
+  
+)
+
+models <- list(
+  "Lag 4 Years" = xm4,
+  "Lag 5 Years" = xm5,
+  "Lag 6 Years" = xm6
+)
+
+fe_rows <- data.frame(
+  term = c("State FE", "Year FE"),
+  `Lag 4 Years` = c("✓", "✓"),
+  `Lag 5 Years` = c("✓", "✓"),
+  `Lag 6 Years` = c("✓", "✓"),
+  stringsAsFactors = FALSE
+)
+
+modelsummary(
+  models,
+  coef_rename = coef_map,
+  stars = TRUE,
+  statistic = "std.error",
+  add_rows = fe_rows,
+ gof_map = c("nobs", "r.squared")
+)
+```
+
+# Clean Data for DiD
+
+```{r}
+# Create RTW year variable (1 if always, 0 if never, 0 or 1 if switch)
+state_year <- df |> 
+  group_by(state) |> 
+  mutate(
+    rtw_year = ifelse(
+      any(rtw == 1),
+      min(year[rtw == 1], na.rm = TRUE),
+      NA_integer_
+    )
+  ) |> 
+  ungroup()
+
+# Create groups
+state_year <- state_year |> 
+  group_by(state) |> 
+  mutate(
+    ever_treated   = any(rtw == 1),
+    never_treated  = all(rtw == 0),
+    always_treated = all(rtw == 1),
+    switcher       = ever_treated & !always_treated
+  ) |> 
+  ungroup()
+
+state_year <- state_year |> 
+  mutate(
+    treated_it = ifelse(!is.na(rtw_year) & year >= rtw_year, 1L, 0L),
+    event_time = year - rtw_year
+  )
+
+# drop always treated
+did_data <- state_year |> 
+  filter(!state %in% c("NE", "MO")) |> 
+  group_by(state) |> 
+  mutate(always_treated = all(rtw == 1)) |> 
+  ungroup() |> 
+  filter(!always_treated)
+```
+
+```{r}
+# Drop Oklahoma
+did_data <- did_data |> 
+  filter(state !="OK")
+
+# Give all never adopters a value of 0 for comparison
+did_data <- did_data |>
+  mutate(
+    rtw_year = ifelse(is.na(rtw_year), 0, rtw_year)
+  )
+
+# Add ID
+did_data$id <- as.integer(factor(did_data$state))
+
+# Remove 1999
+did_data2 <- did_data |> 
+  filter(year !=1999)
+```
+
+```{r}
+# Lag Controls
+did_data2 <- did_data2 |> 
+  arrange(id, year) |> 
+  group_by(id) |> 
+  mutate(
+    ln_state_pop_l1 = lag(ln_state_pop, 1),
+    manufact_per_l1   = lag(manufact_per, 1),
+    ln_real_median_in_l1 = lag(ln_real_median_in, 1),
+    real_median_in_l1 = lag(real_median_in, 1),
+    ln_num_firms_l1   = lag(ln_num_firms, 1),
+    left_wing_l1      = lag(left_wing, 1),
+    union_density_l1 = lag(union_density, 1),
+    num_strikes_l1 = lag(num_strikes, 1),
+
+    # 2-year lags for robustness
+    ln_state_pop_l2 = lag(ln_state_pop, 2),
+    manufact_per_l2   = lag(manufact_per, 2),
+    ln_real_median_in_l2 = lag(ln_real_median_in, 2),
+     real_median_in_l2 = lag(real_median_in, 2),
+    ln_num_firms_l2   = lag(ln_num_firms, 2),
+    left_wing_l2      = lag(left_wing, 2),
+    union_density_l2 = lag(union_density, 2),
+    num_strikes_l2 = lag(num_strikes, 2),
+  ) |> 
+  ungroup()
+
+# Data excluding WI
+did_data_no_wisconsin <- did_data2 |> 
+  filter(state != "WI")
+```
+
+# Test DiD Assumptions
+
+## Table 3: Balance Test
+
+```{r}
+# define treated and control
+balance_data <- did_data2 |> 
+  mutate(treated = as.integer(rtw_year > 0)) 
+
+# keep only pretreatment stuff
+balance_data_pre <- balance_data |> 
+  filter(
+    (treated == 1 & year < rtw_year) |
+      (treated == 0)
+  )
+
+balance_vars <- c(
+  "ln_state_pop",
+  "manufact_per",
+  "ln_real_median_in",
+  "ln_num_firms",
+  "union_density",
+  "left_wing"
+)
+
+# means / sds / Ns by treated vs control + differences
+balance_means <- balance_data_pre |> 
+  select(treated, all_of(balance_vars)) |> 
+  pivot_longer(
+    cols = -treated,
+    names_to = "variable",
+    values_to = "value"
+  ) |> 
+  group_by(variable, treated) |> 
+  summarise(
+    mean = mean(value, na.rm = TRUE),
+    sd   = sd(value, na.rm = TRUE),
+    n    = sum(!is.na(value)),
+    .groups = "drop"
+  ) |> 
+  pivot_wider(
+    names_from = treated,
+    values_from = c(mean, sd, n),
+    names_glue = "{.value}_{treated}"
+  ) |> 
+  mutate(
+    diff = mean_1 - mean_0
+  )
+
+# run t test for each variable
+diff_tests <- lapply(balance_vars, function(v) {
+  ttest <- t.test(balance_data_pre[[v]] ~ balance_data_pre$treated)
+  data.frame(
+    variable = v,
+    p_value  = ttest$p.value
+  )
+}) |> 
+  bind_rows()
+
+table3 <- balance_means |> 
+  left_join(diff_tests, by = "variable") |> 
+  mutate(
+    stars = case_when(
+      p_value < 0.01 ~ "***",
+      p_value < 0.05 ~ "**",
+      p_value < 0.10 ~ "*",
+      TRUE ~ ""
+    )
+  ) |> 
+  transmute(
+    Variable   = variable,
+    Treated    = round(mean_1, 3),
+    Control    = round(mean_0, 3),
+    Difference = paste0(round(diff, 3), stars),
+    N_Treated  = n_1,
+    N_Control  = n_0
+  )
+
+table3
+```
+
+## Figure 3: Parallel Trends
+
+```{r}
+treated_states <- c("MI", "WI", "IN", "KY", "WV")
+
+treated_df <- did_data2 |> 
+  filter(state %in% treated_states)
+
+control_avg <- did_data2 |> 
+  filter(!state %in% treated_states) |> 
+  group_by(year) |> 
+  summarize(
+    avg_esops = mean(num_esops_form_5500, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+p2 <- ggplot(treated_df, aes(x = year, y = num_esops_form_5500, group = state)) +
+  geom_line(
+    data = treated_df |> 
+      filter(year <= rtw_year),
+    aes(color = "Pre-RTW"),
+    size = 0.7
+  ) +
+  geom_line(
+    data = treated_df |> filter(year >= rtw_year),
+    aes(color = "Post-RTW"),
+    size = 0.7
+  ) +
+  geom_line(
+    data = control_avg,
+    aes(x = year, y = avg_esops, color = "Controls", group = 1),
+    size = 1.2
+  ) +
+  geom_text(
+    data = ~ dplyr::filter(.x, year == max(year)),
+    aes(label = state),
+    hjust = -0.1,
+    size = 3.5,              
+    color = "black"
+  ) +
+  scale_color_manual(
+    name = "",
+    values = c(
+      "Pre-RTW"  = "gray50",
+      "Post-RTW" = "blue",
+      "Controls" = "red"
+    )
+  ) +
+  labs(
+    x = "",
+    y = "Number of ESOPs"
+  ) +
+  theme_minimal(base_family = "Times New Roman") +
+  theme(
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    panel.grid.major.y = element_line(color = "gray85", linewidth = 0.4),
+    panel.grid.minor.y = element_line(color = "gray92", linewidth = 0.3),
+    axis.text  = element_text(size = 13),
+    axis.title = element_text(size = 14),
+    legend.text = element_text(size = 14),
+    panel.border = element_rect(color = "black", fill = NA, linewidth = 0.6),
+    legend.position = "bottom",
+    legend.box = "horizontal"
+  ) +
+  scale_y_continuous(
+  breaks = c(0, 50, 100, 150, 200, 250)
+)
+
+p2
+```
+
+### Wald Estimator: Parallel Trends
+
+```{r}
+# Run Model (With Wisconsin)
+att_all <- att_gt(
+  yname  = "num_esops_form_5500",
+  tname  = "year",
+  idname = "id",
+  gname  = "rtw_year",
+  xformla = ~ manufact_per_l1 +
+              ln_real_median_in_l1 +
+              ln_num_firms_l1 +
+              ln_state_pop_l1,
+  data = did_data2
+)
+
+att_event <- aggte(att_all, type = "dynamic")
+
+egt <- att_event$egt
+att <- att_event$att.egt
+
+# indices for pre-treatment event times (leads)
+pre_idx <- which(egt < 0 & !is.na(att))
+inffunc <- att_event$inf.function$dynamic.inf.func.e
+
+Vfull <- crossprod(inffunc) / nrow(inffunc)
+b <- att[pre_idx]
+V <- Vfull[pre_idx, pre_idx, drop = FALSE]
+
+# Wald test
+W <- as.numeric(t(b) %*% solve(V) %*% b)
+df <- length(b)
+pval <- 1 - pchisq(W, df)
+
+c(Wald = W, df = df, p_value = pval)
+
+```
+
+```{r}
+# Run Model (Without Wisconsin)
+att_no_wisc <- att_gt(
+  yname  = "num_esops_form_5500",
+  tname  = "year",
+  idname = "id",
+  gname  = "rtw_year",
+  xformla = ~ manufact_per_l1 +
+              ln_real_median_in_l1 +
+              ln_num_firms_l1 +
+              ln_state_pop_l1,
+  data = did_data_no_wisconsin
+)
+
+att_event <- aggte(att_no_wisc, type = "dynamic")
+
+egt <- att_event$egt
+att <- att_event$att.egt
+
+# indices for pre-treatment event times (leads)
+pre_idx <- which(egt < 0 & !is.na(att))
+inffunc <- att_event$inf.function$dynamic.inf.func.e
+
+Vfull <- crossprod(inffunc) / nrow(inffunc)
+b <- att[pre_idx]
+V <- Vfull[pre_idx, pre_idx, drop = FALSE]
+
+# Wald test
+W <- as.numeric(t(b) %*% solve(V) %*% b)
+df <- length(b)
+pval <- 1 - pchisq(W, df)
+
+c(Wald = W, df = df, p_value = pval)
+
+```
+
+## Visualize Adoption
+
+```{r}
+df <- did_data2 |>
+  filter(year >= 2008) |>
+  group_by(state) |>
+  mutate(
+    treat_year = if (any(rtw == 1, na.rm = TRUE))
+      min(year[rtw == 1], na.rm = TRUE) else Inf
+  ) |>
+  ungroup()
+
+df_plot <- df |>
+  filter(is.finite(treat_year)) |>
+  mutate(
+    state_ordered = reorder(state, treat_year),
+    status = ifelse(rtw == 1, "Treated", "Not treated")
+  ) 
+
+
+adoption <- ggplot(df_plot, aes(x = year, y = state_ordered, fill = status)) +
+  geom_tile() +
+  scale_fill_manual(
+    values = c(
+      "Not treated" = "#c6dbef",  
+      "Treated"     = "#2171b5"   
+    )
+  ) +
+  scale_x_continuous(
+  breaks = c(2008, 2010, 2012, 2014, 2016, 2018, 2020)
+) +
+  labs(x = "Year", y = "State", fill = NULL) +
+ theme_classic( base_size = 14) +
+  theme(
+    axis.text.y   = element_text(size = 15),
+    axis.text.x   = element_text(size = 17),
+    axis.title    = element_text(size = 17),
+    legend.text   = element_text(size = 15),
+    legend.position = "bottom",
+    legend.direction = "horizontal"
+  )
+
+adoption
+```
+
+# First Stage: RTW -\> Union Density
+
+## Run Models
+
+```{r}
+# With Wisconsin
+att_all_union <- att_gt(yname = "union_density",
+                        tname = "year",
+                        idname = "id",
+                        gname = "rtw_year",
+                        xformla = ~ manufact_per_l1 +
+             ln_real_median_in_l1 + ln_num_firms_l1,
+                        data = did_data2)
+att_overall2 <- aggte(
+  att_all_union,
+  type = "simple"
+)
+
+# Without Wisconsin
+att_no_wisc_union <- att_gt(yname = "union_density",
+                        tname = "year",
+                        idname = "id",
+                        gname = "rtw_year",
+                        xformla = ~  manufact_per_l1 +
+             real_median_in_l1 + ln_num_firms_l1, 
+                        data = did_data_no_wisconsin)
+
+att_overall_no_wisc2 <- aggte(
+  att_no_wisc_union,
+  type = "simple"
+)
+```
+
+## ATT Table 1
+
+```{r}
+extract_att <- function(x) {
+  att <- x$overall.att
+  se  <- x$overall.se
+  ci_l <- att - 1.96 * se
+  ci_u <- att + 1.96 * se
+
+  z <- att / se
+  p <- 2 * (1 - pnorm(abs(z)))
+  stars <- ifelse(p < 0.001, "***",
+           ifelse(p < 0.01,  "**",
+           ifelse(p < 0.05,  "*",
+           ifelse(p < 0.10,  "+", ""))))
+
+  data.frame(
+    ATT = att,
+    SE = se,
+    CI_low = ci_l,
+    CI_high = ci_u,
+    p_value = p,
+    stars = stars
+  )
+}
+
+r_all  <- extract_att(att_overall2);         r_all$Sample  <- "All states"
+r_nowi <- extract_att(att_overall_no_wisc2); r_nowi$Sample <- "Excluding Wisconsin"
+
+att_table <- rbind(r_all, r_nowi)
+
+# Make it pretty
+att_table <- att_table[, c("Sample","ATT","SE","CI_low","CI_high","stars","p_value")]
+att_table$ATT  <- round(att_table$ATT, 3)
+att_table$SE   <- round(att_table$SE, 3)
+att_table$CI_low  <- round(att_table$CI_low, 3)
+att_table$CI_high <- round(att_table$CI_high, 3)
+att_table$p_value <- signif(att_table$p_value, 3)
+
+att_table
+```
+
+## Figure 4: Trends in Union Density
+
+```{r}
+
+rtw_timing <- tribble(
+  ~state, ~rtw_year2,
+  "AL", 1953, "AR", 1944, "AZ", 1946, "FL", 1944, "GA", 1947,
+  "IA", 1947, "ID", 1985, "IN", 2012, "KS", 1958, "KY", 2017,
+  "LA", 1976, "MS", 1954, "NC", 1947, "ND", 1947, "NE", 1946,
+  "NV", 1952,              # OK removed
+  "SC", 1954, "SD", 1948, "TN", 1947,
+  "TX", 1947, "UT", 1955, "VA", 1947, "WI", 2015, "WV", 2016,
+  "WY", 1963, "MI", 2012
+)
+
+state_year_classified <- df |>
+  full_join(rtw_timing, by = "state") |>
+  mutate(
+    rtw_group = case_when(
+      is.na(rtw_year2)  ~ "Never RTW",
+      rtw_year2 < 2000  ~ "Always RTW",
+      rtw_year2 >= 2000 ~ "RTW-Switchers"
+    )
+  )
+
+
+plot_df <- state_year_classified |>
+  mutate(
+    rtw_group = case_when(
+      always_treated == TRUE ~ "Always RTW",
+      switcher == TRUE       ~ "RTW-Switchers",
+      never_treated == TRUE  ~ "Never RTW",
+      TRUE                   ~ NA_character_
+    )
+  ) |>
+  group_by(year, rtw_group) |>
+  summarise(
+    union_density = mean(union_density, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+plot_df <- plot_df |> 
+  filter(year !=1999)
+
+p_union <- ggplot(
+  plot_df,
+  aes(x = year, y = union_density, color = rtw_group, linetype = rtw_group)
+) +
+  geom_line(linewidth = 1.2) +
+
+  scale_color_manual(
+    values = c(
+      "Always RTW"    = "grey40",
+      "RTW-Switchers" = "blue",
+      "Never RTW"     = "red"
+    )
+  ) +
+  scale_linetype_manual(
+    values = c(
+      "Always RTW"    = "solid",
+      "RTW-Switchers" = "dashed",
+      "Never RTW"     = "solid"
+    )
+  ) +
+
+  labs(
+    x = "Year",
+    y = "Union Density",
+    color = NULL,
+    linetype = NULL
+  ) +
+
+  theme_minimal() +
+  theme(
+     panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    panel.grid.major.y = element_line(color = "gray80", linewidth = 0.5),
+    panel.grid.minor.y =element_line(color = "gray90", linewidth = 0.5),
+    plot.title = element_text(size = 18, hjust = 0.5),
+    axis.title = element_text(size = 18),
+    axis.text  = element_text(size = 17),
+    panel.border = element_rect(
+      color = "black",
+      fill  = NA,
+      linewidth = 0.6
+    ),
+    legend.position = "bottom",
+    legend.text = element_text(size = 14)
+  ) 
+
+p_union
+```
+
+## Figure 5: RTW on Union Density
+
+```{r}
+att_aggregate_no_wisc_union <- aggte(
+  att_no_wisc_union,
+  type = "dynamic",
+  min_e = -10,
+  max_e = 10
+)
+
+ggdid(att_aggregate_no_wisc_union) +
+  geom_hline(
+    yintercept = 0,
+    linetype = "solid",
+    linewidth = 0.6,
+    color = "black"
+  ) +
+  geom_vline(
+    xintercept = -0.5,
+    linetype = "dashed",
+    linewidth = 0.6,
+    color = "black"
+  ) +
+  coord_cartesian(ylim = c(-5, 5)) +
+  scale_color_manual(
+    values = c("grey50", "blue"),
+    labels = c("Pre", "Post")
+  ) +
+  scale_fill_manual(
+    values = c("gray80", "gray70"),
+    labels = c("Pre", "Post")
+  ) +
+  labs(
+    title = "Effect of RTW on Union Density",
+    color = NULL,
+    fill = NULL
+  ) +
+  theme(
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.grid.major.y = element_line(color = "gray85", linewidth = 0.4),
+    panel.border = element_rect(
+      color = "black",
+      fill = NA,
+      linewidth = 0.6
+    ),
+    axis.text = element_text(size = 14),
+    axis.title = element_text(size = 15),
+    legend.text = element_text(size = 15),
+    legend.title = element_blank()
+  )
+
+```
+
+# Reduced Form: RTW -\> ESOPs
+
+## Run Models
+
+```{r}
+# With WI
+att_all <- att_gt(yname = "num_esops_form_5500",
+                        tname = "year",
+                        idname = "id",
+                        gname = "rtw_year",
+                        xformla = ~ manufact_per_l1 +
+             ln_real_median_in_l1 + ln_num_firms_l1, 
+                        data = did_data2)
+
+att_overall <- aggte(
+  att_all,
+  type = "simple"
+)
+
+# Without WI
+att_no_wisc <- att_gt(yname = "num_esops_form_5500",
+                        tname = "year",
+                        idname = "id",
+                        gname = "rtw_year",
+                        xformla = ~  manufact_per_l1 +
+             real_median_in_l1 + ln_num_firms_l1,
+                        data = did_data_no_wisconsin)
+
+att_overall_no_wisc <- aggte(
+  att_no_wisc,
+  type = "simple"
+)
+```
+
+## ATT Table 2
+
+```{r}
+# Models
+att_overall <- aggte(
+  att_all,
+  type = "simple"
+)
+
+att_overall_no_wisc <- aggte(
+  att_no_wisc,
+  type = "simple"
+)
+
+r_all  <- extract_att(att_overall);         r_all$Sample  <- "All states"
+r_nowi <- extract_att(att_overall_no_wisc); r_nowi$Sample <- "Excluding Wisconsin"
+
+att_table <- rbind(r_all, r_nowi)
+
+# Make it pretty
+att_table <- att_table[, c("Sample","ATT","SE","CI_low","CI_high","stars","p_value")]
+att_table$ATT  <- round(att_table$ATT, 3)
+att_table$SE   <- round(att_table$SE, 3)
+att_table$CI_low  <- round(att_table$CI_low, 3)
+att_table$CI_high <- round(att_table$CI_high, 3)
+att_table$p_value <- signif(att_table$p_value, 3)
+
+att_table
+
+```
+
+## Figure 6: RTW on ESOPs
+
+```{r}
+
+att_aggregate_no_wisc <- aggte(
+  att_no_wisc,
+  type = "dynamic",
+  min_e = -10,
+  max_e = 10
+)
+
+ggdid(att_aggregate_no_wisc) +
+  geom_hline(
+    yintercept = 0,
+    linetype = "solid",
+    linewidth = 0.6,
+    color = "black"
+  ) +
+  geom_vline(
+    xintercept = -0.5,
+    linetype = "dashed",
+    linewidth = 0.6,
+    color = "black"
+  ) +
+  coord_cartesian(ylim = c(-60, 60)) +
+  scale_color_manual(
+    values = c("grey50", "red"),
+    labels = c("Pre", "Post")
+  ) +
+  scale_fill_manual(
+    values = c("gray80", "gray70"),
+    labels = c("Pre", "Post")
+  ) +
+  labs(
+    title = "Effect of RTW on ESOPs",
+    color = NULL,
+    fill = NULL
+  ) +
+  theme_minimal() +
+  theme(
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.grid.major.y = element_line(color = "gray85", linewidth = 0.4),
+    panel.border = element_rect(
+      color = "black",
+      fill = NA,
+      linewidth = 0.6
+    ),
+    axis.text = element_text(size = 14),
+    axis.title = element_text(size = 15),
+    legend.text = element_text(size = 15),
+    legend.title = element_blank()
+  )
+
+```
+
+# Conditional Effect: RTW -\> ESOPs (Control for Union Density)
+
+## Run Models
+
+```{r}
+# Including Wisconsin
+att_all_control <- att_gt(yname = "num_esops_form_5500",
+                        tname = "year",
+                        idname = "id",
+                        gname = "rtw_year",
+                        xformla = ~ manufact_per_l1 +
+             ln_real_median_in_l1 + ln_num_firms_l1 + union_density_l1, 
+                        data = did_data2)
+
+# Without Wisconsin
+att_no_wisc_control <- att_gt(yname = "num_esops_form_5500",
+                        tname = "year",
+                        idname = "id",
+                        gname = "rtw_year",
+                        xformla = ~  manufact_per_l1 +
+             real_median_in_l1 + ln_num_firms_l1 + union_density_l1,
+                        data = did_data_no_wisconsin)
+```
+
+## ATT Table 3
+
+```{r}
+att_overall2 <- aggte(
+  att_all_control,
+  type = "simple"
+)
+att_overall_no_wisc2 <- aggte(
+  att_no_wisc_control,
+  type = "simple"
+)
+
+r_all  <- extract_att(att_overall2);         r_all$Sample  <- "All states"
+r_nowi <- extract_att(att_overall_no_wisc2); r_nowi$Sample <- "Excluding Wisconsin"
+
+att_table <- rbind(r_all, r_nowi)
+
+# Make it pretty
+att_table <- att_table[, c("Sample","ATT","SE","CI_low","CI_high","stars","p_value")]
+att_table$ATT  <- round(att_table$ATT, 3)
+att_table$SE   <- round(att_table$SE, 3)
+att_table$CI_low  <- round(att_table$CI_low, 3)
+att_table$CI_high <- round(att_table$CI_high, 3)
+att_table$p_value <- signif(att_table$p_value, 3)
+
+att_table
+```
+
+# Robustness Checks
+
+## State-By-State Estimates
+
+```{r}
+# INDIANA
+indiana <- did_data2 |> 
+  filter(state != "WI") |> 
+  filter(state != "KY") |> 
+  filter(state != "WV") |> 
+  filter(state != "MI")
+
+# esops
+att_ind <- att_gt(yname = "num_esops_form_5500",
+                        tname = "year",
+                        idname = "id",
+                        gname = "rtw_year",
+                        xformla = ~ manufact_per_l1 +
+             ln_real_median_in_l1 + ln_num_firms_l1, 
+                        data = indiana)
+
+att_indiana <- aggte(
+  att_ind,
+  type = "simple"
+)
+
+# union density
+att_ind2 <- att_gt(yname = "union_density",
+                        tname = "year",
+                        idname = "id",
+                        gname = "rtw_year",
+                        xformla = ~ manufact_per_l1 +
+             ln_real_median_in_l1 + ln_num_firms_l1, 
+                        data = indiana)
+
+att_indiana2 <- aggte(
+  att_ind2,
+  type = "simple"
+)
+```
+
+```{r}
+# MICHIGAN
+michigan <- did_data2 |> 
+  filter(state != "WI") |> 
+  filter(state != "KY") |> 
+  filter(state != "WV") |> 
+  filter(state != "IN")
+
+# esops
+att_mich <- att_gt(yname = "num_esops_form_5500",
+                        tname = "year",
+                        idname = "id",
+                        gname = "rtw_year",
+                        xformla = ~ manufact_per_l1 +
+             ln_real_median_in_l1 + ln_num_firms_l1,
+                        data = michigan)
+att_michigan <- aggte(
+  att_mich,
+  type = "simple"
+)
+
+# union density
+att_mich2 <- att_gt(yname = "union_density",
+                        tname = "year",
+                        idname = "id",
+                        gname = "rtw_year",
+                        xformla = ~ manufact_per_l1 +
+             ln_real_median_in_l1 + ln_num_firms_l1, 
+                        data = michigan)
+att_michigan2 <- aggte(
+  att_mich2,
+  type = "simple"
+)
+```
+
+```{r}
+# WEST VIRGINIA
+west_virg <- did_data2 |> 
+  filter(state != "WI") |> 
+  filter(state != "KY") |> 
+  filter(state != "MI") |> 
+  filter(state != "IN")
+
+# esops
+att_wv <- att_gt(yname = "num_esops_form_5500",
+                        tname = "year",
+                        idname = "id",
+                        gname = "rtw_year",
+                        xformla = ~ manufact_per_l1 +
+             ln_real_median_in_l1 + ln_num_firms_l1, 
+                        data = west_virg)
+att_west_v <- aggte(
+  att_wv,
+  type = "simple"
+)
+
+# union denstiy
+att_wv2 <- att_gt(yname = "union_density",
+                        tname = "year",
+                        idname = "id",
+                        gname = "rtw_year",
+                        xformla = ~ manufact_per_l1 +
+             ln_real_median_in_l1 + ln_num_firms_l1, 
+                        data = west_virg)
+att_west_v2 <- aggte(
+  att_wv2,
+  type = "simple"
+)
+```
+
+```{r}
+# KENTUCKY
+kentucky <- did_data2 |> 
+  filter(state != "WI") |> 
+  filter(state != "WV") |> 
+  filter(state != "MI") |> 
+  filter(state != "IN")
+
+att_kentuc <- att_gt(yname = "num_esops_form_5500",
+                        tname = "year",
+                        idname = "id",
+                        gname = "rtw_year",
+                        xformla = ~ manufact_per_l1 +
+             ln_real_median_in_l1 + ln_num_firms_l1, 
+                        data = kentucky)
+att_kentucky <- aggte(
+  att_kentuc,
+  type = "simple"
+)
+
+# union density
+att_kentuc2 <- att_gt(yname = "union_density",
+                        tname = "year",
+                        idname = "id",
+                        gname = "rtw_year",
+                        xformla = ~ manufact_per_l1 +
+             ln_real_median_in_l1 + ln_num_firms_l1, 
+                        data = kentucky)
+att_kentucky2 <- aggte(
+  att_kentuc2,
+  type = "simple"
+)
+```
+
+```{r}
+# WISCONSIN
+wisc <- did_data2 |> 
+  filter(state != "KY") |> 
+  filter(state != "WV") |> 
+  filter(state != "MI") |> 
+  filter(state != "IN")
+
+# esops
+att_wisc <- att_gt(yname = "num_esops_form_5500",
+                        tname = "year",
+                        idname = "id",
+                        gname = "rtw_year",
+                        xformla = ~ manufact_per_l1 +
+             ln_real_median_in_l1 + ln_num_firms_l1, 
+                        data = wisc)
+att_wisconsin <- aggte(
+  att_wisc,
+  type = "simple"
+)
+
+# union density=
+att_wisc2 <- att_gt(yname = "union_density",
+                        tname = "year",
+                        idname = "id",
+                        gname = "rtw_year",
+                        xformla = ~ manufact_per_l1 +
+             ln_real_median_in_l1 + ln_num_firms_l1,
+                        data = wisc)
+att_wisconsin2 <- aggte(
+  att_wisc2,
+  type = "simple"
+)
+```
+
+## ATT Table: Disaggregated by State
+
+```{r}
+r_bench <- extract
+r_ind  <- extract_att(att_indiana);         r_ind$Sample  <- "Indiana"
+r_mich <- extract_att(att_michigan); r_mich$Sample <- "Michigan"
+r_wv  <- extract_att(att_west_v);     r_wv$Sample  <- "West Virginia"
+r_ky <- extract_att(att_kentucky);     r_ky$Sample  <- "Kentucky"
+r_wisc <- extract_att(att_wisconsin);     r_wisc$Sample  <- "Wisconsin"
+
+att_table_states <- rbind(r_ind, r_mich, r_wv, r_ky, r_wisc)
+
+# Make it pretty
+att_table_states <- att_table_states[, c("Sample","ATT","SE","CI_low","CI_high","stars","p_value")]
+att_table_states$ATT  <- round(att_table_states$ATT, 3)
+att_table_states$SE   <- round(att_table_states$SE, 3)
+att_table_states$CI_low  <- round(att_table_states$CI_low, 3)
+att_table_states$CI_high <- round(att_table_states$CI_high, 3)
+att_table_states$p_value <- signif(att_table_states$p_value, 3)
+
+att_table_states
+```
