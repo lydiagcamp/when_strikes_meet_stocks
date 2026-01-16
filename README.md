@@ -6,10 +6,10 @@
 This repository contains the data and replication code for a paper examining the effect of union strength on employee stock ownership plan (ESOP) adoption. Using a staggered difference-in-differences design, the paper estimates the causal impact of right-to-work (RTW) laws on union strength and ESOP formation across U.S. states.
 
 ## Replication Materials
+- **Full Paper**
+  
 - **Replication Code**  
   [`https://lydiagcamp.github.io/when_strikes_meet_stocks/`](https://lydiagcamp.github.io/when_strikes_meet_stocks/)
-
-- **Full Paper**
 
 - **Interactive Map of ESOPs Across the U.S.**  
   [`Open the map here!`](https://lydia-camp.shinyapps.io/plans-map-us/)
