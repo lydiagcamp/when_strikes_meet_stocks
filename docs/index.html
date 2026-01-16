@@ -204,8 +204,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="load-packages-and-import-data" class="level1">
 <h1>Load Packages and Import Data</h1>
 <div class="cell">
-<details open="" class="code-fold">
-<summary>Code</summary>
+<details class="code-fold">
+<summary>Show code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load Packages</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(lmtest)</span>
@@ -240,8 +240,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="table-2-descriptive-statistics" class="level2">
 <h2 class="anchored" data-anchor-id="table-2-descriptive-statistics">Table 2: Descriptive Statistics</h2>
 <div class="cell">
-<details open="" class="code-fold">
-<summary>Code</summary>
+<details class="code-fold">
+<summary>Show code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">scipen =</span> <span class="dv">999</span>)</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>vars <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
@@ -278,8 +278,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="figure-2-map-of-rtw-adoption" class="level2">
 <h2 class="anchored" data-anchor-id="figure-2-map-of-rtw-adoption">Figure 2: Map of RTW Adoption</h2>
 <div class="cell">
-<details open="" class="code-fold">
-<summary>Code</summary>
+<details class="code-fold">
+<summary>Show code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>rtw_years <span class="ot">&lt;-</span> <span class="fu">tribble</span>(</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="sc">~</span>abbr, <span class="sc">~</span>year,</span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">"AL"</span>, <span class="dv">1953</span>, <span class="st">"AR"</span>, <span class="dv">1944</span>, <span class="st">"AZ"</span>, <span class="dv">1946</span>, <span class="st">"FL"</span>, <span class="dv">1944</span>, <span class="st">"GA"</span>, <span class="dv">1947</span>,</span>
@@ -347,13 +347,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb3-65"><a href="#cb3-65" aria-hidden="true" tabindex="-1"></a>p</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 </div>
+<p><img src="images/rtw_adoption_map.png" class="img-fluid"></p>
 </section>
 </section>
 <section id="ols-union-density---esops" class="level1">
 <h1>OLS: Union Density -&gt; ESOPs</h1>
 <div class="cell">
-<details open="" class="code-fold">
-<summary>Code</summary>
+<details class="code-fold">
+<summary>Show code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Sort the panel</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>state_year <span class="ot">&lt;-</span> state_year <span class="sc">|&gt;</span> </span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(state, year)</span>
@@ -413,8 +414,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="table-a1-ols-regressions" class="level2">
 <h2 class="anchored" data-anchor-id="table-a1-ols-regressions">Table A1: OLS Regressions</h2>
 <div class="cell">
-<details open="" class="code-fold">
-<summary>Code</summary>
+<details class="code-fold">
+<summary>Show code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create OLS Model Summary</span></span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>coef_map <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
@@ -481,8 +482,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="clean-data-for-did" class="level1">
 <h1>Clean Data for DiD</h1>
 <div class="cell">
-<details open="" class="code-fold">
-<summary>Code</summary>
+<details class="code-fold">
+<summary>Show code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create RTW year variable (1 if always, 0 if never, 0 or 1 if switch)</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>state_year <span class="ot">&lt;-</span> df <span class="sc">|&gt;</span> </span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(state) <span class="sc">|&gt;</span> </span>
@@ -522,8 +523,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </details>
 </div>
 <div class="cell">
-<details open="" class="code-fold">
-<summary>Code</summary>
+<details class="code-fold">
+<summary>Show code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Drop Oklahoma</span></span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>did_data <span class="ot">&lt;-</span> did_data <span class="sc">|&gt;</span> </span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(state <span class="sc">!=</span><span class="st">"OK"</span>)</span>
@@ -543,8 +544,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </details>
 </div>
 <div class="cell">
-<details open="" class="code-fold">
-<summary>Code</summary>
+<details class="code-fold">
+<summary>Show code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Lag Controls</span></span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>did_data2 <span class="ot">&lt;-</span> did_data2 <span class="sc">|&gt;</span> </span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(id, year) <span class="sc">|&gt;</span> </span>
@@ -582,8 +583,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="table-3-balance-test" class="level2">
 <h2 class="anchored" data-anchor-id="table-3-balance-test">Table 3: Balance Test</h2>
 <div class="cell">
-<details open="" class="code-fold">
-<summary>Code</summary>
+<details class="code-fold">
+<summary>Show code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># define treated and control</span></span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>balance_data <span class="ot">&lt;-</span> did_data2 <span class="sc">|&gt;</span> </span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">treated =</span> <span class="fu">as.integer</span>(rtw_year <span class="sc">&gt;</span> <span class="dv">0</span>)) </span>
@@ -664,8 +665,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="figure-3-parallel-trends" class="level2">
 <h2 class="anchored" data-anchor-id="figure-3-parallel-trends">Figure 3: Parallel Trends</h2>
 <div class="cell">
-<details open="" class="code-fold">
-<summary>Code</summary>
+<details class="code-fold">
+<summary>Show code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>treated_states <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"MI"</span>, <span class="st">"WI"</span>, <span class="st">"IN"</span>, <span class="st">"KY"</span>, <span class="st">"WV"</span>)</span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>treated_df <span class="ot">&lt;-</span> did_data2 <span class="sc">|&gt;</span> </span>
@@ -735,11 +736,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb10-67"><a href="#cb10-67" aria-hidden="true" tabindex="-1"></a>p2</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 </div>
+<p><img src="images/pretrends_treated_vs_controls.png" class="img-fluid"></p>
 <section id="wald-estimator-parallel-trends" class="level3">
 <h3 class="anchored" data-anchor-id="wald-estimator-parallel-trends">Wald Estimator: Parallel Trends</h3>
 <div class="cell">
-<details open="" class="code-fold">
-<summary>Code</summary>
+<details class="code-fold">
+<summary>Show code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Run Model (With Wisconsin)</span></span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>att_all <span class="ot">&lt;-</span> <span class="fu">att_gt</span>(</span>
 <span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">yname  =</span> <span class="st">"num_esops_form_5500"</span>,</span>
@@ -775,8 +777,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </details>
 </div>
 <div class="cell">
-<details open="" class="code-fold">
-<summary>Code</summary>
+<details class="code-fold">
+<summary>Show code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Run Model (Without Wisconsin)</span></span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>att_no_wisc <span class="ot">&lt;-</span> <span class="fu">att_gt</span>(</span>
 <span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">yname  =</span> <span class="st">"num_esops_form_5500"</span>,</span>
@@ -816,8 +818,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="visualize-adoption" class="level2">
 <h2 class="anchored" data-anchor-id="visualize-adoption">Visualize Adoption</h2>
 <div class="cell">
-<details open="" class="code-fold">
-<summary>Code</summary>
+<details class="code-fold">
+<summary>Show code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> did_data2 <span class="sc">|&gt;</span></span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(year <span class="sc">&gt;=</span> <span class="dv">2008</span>) <span class="sc">|&gt;</span></span>
 <span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(state) <span class="sc">|&gt;</span></span>
@@ -867,8 +869,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="run-models" class="level2">
 <h2 class="anchored" data-anchor-id="run-models">Run Models</h2>
 <div class="cell">
-<details open="" class="code-fold">
-<summary>Code</summary>
+<details class="code-fold">
+<summary>Show code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># With Wisconsin</span></span>
 <span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>att_all_union <span class="ot">&lt;-</span> <span class="fu">att_gt</span>(<span class="at">yname =</span> <span class="st">"union_density"</span>,</span>
 <span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>                        <span class="at">tname =</span> <span class="st">"year"</span>,</span>
@@ -901,8 +903,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="att-table-1" class="level2">
 <h2 class="anchored" data-anchor-id="att-table-1">ATT Table 1</h2>
 <div class="cell">
-<details open="" class="code-fold">
-<summary>Code</summary>
+<details class="code-fold">
+<summary>Show code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>extract_att <span class="ot">&lt;-</span> <span class="cf">function</span>(x) {</span>
 <span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  att <span class="ot">&lt;-</span> x<span class="sc">$</span>overall.att</span>
 <span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  se  <span class="ot">&lt;-</span> x<span class="sc">$</span>overall.se</span>
@@ -946,8 +948,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="figure-4-trends-in-union-density" class="level2">
 <h2 class="anchored" data-anchor-id="figure-4-trends-in-union-density">Figure 4: Trends in Union Density</h2>
 <div class="cell">
-<details open="" class="code-fold">
-<summary>Code</summary>
+<details class="code-fold">
+<summary>Show code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>rtw_timing <span class="ot">&lt;-</span> <span class="fu">tribble</span>(</span>
 <span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  <span class="sc">~</span>state, <span class="sc">~</span>rtw_year2,</span>
 <span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">"AL"</span>, <span class="dv">1953</span>, <span class="st">"AR"</span>, <span class="dv">1944</span>, <span class="st">"AZ"</span>, <span class="dv">1946</span>, <span class="st">"FL"</span>, <span class="dv">1944</span>, <span class="st">"GA"</span>, <span class="dv">1947</span>,</span>
@@ -1037,12 +1039,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb16-87"><a href="#cb16-87" aria-hidden="true" tabindex="-1"></a>p_union</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 </div>
+<p><img src="images/union_density-01.png" class="img-fluid"></p>
 </section>
 <section id="figure-5-rtw-on-union-density" class="level2">
 <h2 class="anchored" data-anchor-id="figure-5-rtw-on-union-density">Figure 5: RTW on Union Density</h2>
 <div class="cell">
-<details open="" class="code-fold">
-<summary>Code</summary>
+<details class="code-fold">
+<summary>Show code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>att_aggregate_no_wisc_union <span class="ot">&lt;-</span> <span class="fu">aggte</span>(</span>
 <span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  att_no_wisc_union,</span>
 <span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">type =</span> <span class="st">"dynamic"</span>,</span>
@@ -1093,6 +1096,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb17-48"><a href="#cb17-48" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 </div>
+<p><img src="images/ggdid_union-01.png" class="img-fluid"></p>
 </section>
 </section>
 <section id="reduced-form-rtw---esops" class="level1">
@@ -1100,8 +1104,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="run-models-1" class="level2">
 <h2 class="anchored" data-anchor-id="run-models-1">Run Models</h2>
 <div class="cell">
-<details open="" class="code-fold">
-<summary>Code</summary>
+<details class="code-fold">
+<summary>Show code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># With WI</span></span>
 <span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>att_all <span class="ot">&lt;-</span> <span class="fu">att_gt</span>(<span class="at">yname =</span> <span class="st">"num_esops_form_5500"</span>,</span>
 <span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>                        <span class="at">tname =</span> <span class="st">"year"</span>,</span>
@@ -1135,8 +1139,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="att-table-2" class="level2">
 <h2 class="anchored" data-anchor-id="att-table-2">ATT Table 2</h2>
 <div class="cell">
-<details open="" class="code-fold">
-<summary>Code</summary>
+<details class="code-fold">
+<summary>Show code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Models</span></span>
 <span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>att_overall <span class="ot">&lt;-</span> <span class="fu">aggte</span>(</span>
 <span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>  att_all,</span>
@@ -1168,8 +1172,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="figure-6-rtw-on-esops" class="level2">
 <h2 class="anchored" data-anchor-id="figure-6-rtw-on-esops">Figure 6: RTW on ESOPs</h2>
 <div class="cell">
-<details open="" class="code-fold">
-<summary>Code</summary>
+<details class="code-fold">
+<summary>Show code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>att_aggregate_no_wisc <span class="ot">&lt;-</span> <span class="fu">aggte</span>(</span>
 <span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  att_no_wisc,</span>
 <span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">type =</span> <span class="st">"dynamic"</span>,</span>
@@ -1221,6 +1225,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb20-49"><a href="#cb20-49" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 </div>
+<p><img src="images/ggdid_no_wisconsin.png" class="img-fluid"></p>
 </section>
 </section>
 <section id="conditional-effect-rtw---esops-control-for-union-density" class="level1">
@@ -1228,8 +1233,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="run-models-2" class="level2">
 <h2 class="anchored" data-anchor-id="run-models-2">Run Models</h2>
 <div class="cell">
-<details open="" class="code-fold">
-<summary>Code</summary>
+<details class="code-fold">
+<summary>Show code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Including Wisconsin</span></span>
 <span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>att_all_control <span class="ot">&lt;-</span> <span class="fu">att_gt</span>(<span class="at">yname =</span> <span class="st">"num_esops_form_5500"</span>,</span>
 <span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>                        <span class="at">tname =</span> <span class="st">"year"</span>,</span>
@@ -1253,8 +1258,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="att-table-3" class="level2">
 <h2 class="anchored" data-anchor-id="att-table-3">ATT Table 3</h2>
 <div class="cell">
-<details open="" class="code-fold">
-<summary>Code</summary>
+<details class="code-fold">
+<summary>Show code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>att_overall2 <span class="ot">&lt;-</span> <span class="fu">aggte</span>(</span>
 <span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>  att_all_control,</span>
 <span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">type =</span> <span class="st">"simple"</span></span>
@@ -1287,8 +1292,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="state-by-state-estimates" class="level2">
 <h2 class="anchored" data-anchor-id="state-by-state-estimates">State-By-State Estimates</h2>
 <div class="cell">
-<details open="" class="code-fold">
-<summary>Code</summary>
+<details class="code-fold">
+<summary>Show code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co"># INDIANA</span></span>
 <span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>indiana <span class="ot">&lt;-</span> did_data2 <span class="sc">|&gt;</span> </span>
 <span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(state <span class="sc">!=</span> <span class="st">"WI"</span>) <span class="sc">|&gt;</span> </span>
@@ -1326,8 +1331,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </details>
 </div>
 <div class="cell">
-<details open="" class="code-fold">
-<summary>Code</summary>
+<details class="code-fold">
+<summary>Show code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co"># MICHIGAN</span></span>
 <span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>michigan <span class="ot">&lt;-</span> did_data2 <span class="sc">|&gt;</span> </span>
 <span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(state <span class="sc">!=</span> <span class="st">"WI"</span>) <span class="sc">|&gt;</span> </span>
@@ -1363,8 +1368,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </details>
 </div>
 <div class="cell">
-<details open="" class="code-fold">
-<summary>Code</summary>
+<details class="code-fold">
+<summary>Show code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co"># WEST VIRGINIA</span></span>
 <span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>west_virg <span class="ot">&lt;-</span> did_data2 <span class="sc">|&gt;</span> </span>
 <span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(state <span class="sc">!=</span> <span class="st">"WI"</span>) <span class="sc">|&gt;</span> </span>
@@ -1400,8 +1405,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </details>
 </div>
 <div class="cell">
-<details open="" class="code-fold">
-<summary>Code</summary>
+<details class="code-fold">
+<summary>Show code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="co"># KENTUCKY</span></span>
 <span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>kentucky <span class="ot">&lt;-</span> did_data2 <span class="sc">|&gt;</span> </span>
 <span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(state <span class="sc">!=</span> <span class="st">"WI"</span>) <span class="sc">|&gt;</span> </span>
@@ -1436,8 +1441,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </details>
 </div>
 <div class="cell">
-<details open="" class="code-fold">
-<summary>Code</summary>
+<details class="code-fold">
+<summary>Show code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co"># WISCONSIN</span></span>
 <span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>wisc <span class="ot">&lt;-</span> did_data2 <span class="sc">|&gt;</span> </span>
 <span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(state <span class="sc">!=</span> <span class="st">"KY"</span>) <span class="sc">|&gt;</span> </span>
@@ -1476,8 +1481,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="att-table-disaggregated-by-state" class="level2">
 <h2 class="anchored" data-anchor-id="att-table-disaggregated-by-state">ATT Table: Disaggregated by State</h2>
 <div class="cell">
-<details open="" class="code-fold">
-<summary>Code</summary>
+<details class="code-fold">
+<summary>Show code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>r_bench <span class="ot">&lt;-</span> extract</span>
 <span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>r_ind  <span class="ot">&lt;-</span> <span class="fu">extract_att</span>(att_indiana);         r_ind<span class="sc">$</span>Sample  <span class="ot">&lt;-</span> <span class="st">"Indiana"</span></span>
 <span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>r_mich <span class="ot">&lt;-</span> <span class="fu">extract_att</span>(att_michigan); r_mich<span class="sc">$</span>Sample <span class="ot">&lt;-</span> <span class="st">"Michigan"</span></span>

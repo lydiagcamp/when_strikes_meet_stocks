@@ -8,7 +8,8 @@ format:
     theme: cosmo
     toc: true
     toc-depth: 3
-    code-fold: show
+    code-fold: true
+    code-summary: "Show code"
     code-copy: true
     code-overflow: wrap
 execute:
@@ -155,6 +156,8 @@ p <- ggplot(sf_map) +
 
 p
 ```
+
+![](images/rtw_adoption_map.png)
 
 # OLS: Union Density -\> ESOPs
 
@@ -524,6 +527,8 @@ p2 <- ggplot(treated_df, aes(x = year, y = num_esops_form_5500, group = state)) 
 p2
 ```
 
+![](images/pretrends_treated_vs_controls.png)
+
 ### Wald Estimator: Parallel Trends
 
 ```{r}
@@ -811,6 +816,8 @@ p_union <- ggplot(
 p_union
 ```
 
+![](images/union_density-01.png)
+
 ## Figure 5: RTW on Union Density
 
 ```{r}
@@ -864,6 +871,8 @@ ggdid(att_aggregate_no_wisc_union) +
   )
 
 ```
+
+![](images/ggdid_union-01.png)
 
 # Reduced Form: RTW -\> ESOPs
 
@@ -985,6 +994,8 @@ ggdid(att_aggregate_no_wisc) +
   )
 
 ```
+
+![](images/ggdid_no_wisconsin.png)
 
 # Conditional Effect: RTW -\> ESOPs (Control for Union Density)
 
