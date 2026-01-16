@@ -2,9 +2,6 @@ project:
   type: website
   output-dir: docs
 
-website:
-  title: "Replication"
-
 format:
   html:
     theme: cosmo
