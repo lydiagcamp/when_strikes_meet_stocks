@@ -7,8 +7,7 @@ This repository contains the data and replication code for a paper examining the
 
 The replication code is linked here: [`https://lydiagcamp.github.io/when_strikes_meet_stocks/`](https://lydiagcamp.github.io/when_strikes_meet_stocks/)
 
-
-full paper can be found at the link here
+And the full paper can be found here.
 
 ## Additional Resources on Staggered Difference-in-Differences
 
