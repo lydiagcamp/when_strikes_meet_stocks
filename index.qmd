@@ -40,6 +40,10 @@ library(plm)
 library(scales)
 library(sf)
 library(modelsummary)
+library(twfeivdecomp)
+library(devtools)
+install_github("tye27/idid")
+library(idid)
 
 # Load Data
 setwd("your/working/directory")
@@ -476,23 +480,23 @@ p2 <- ggplot(treated_df, aes(x = year, y = num_esops_form_5500, group = state)) 
     data = treated_df |> 
       filter(year <= rtw_year),
     aes(color = "Pre-RTW"),
-    size = 0.7
+    size = 1.5
   ) +
   geom_line(
     data = treated_df |> filter(year >= rtw_year),
     aes(color = "Post-RTW"),
-    size = 0.7
+    size = 1.5
   ) +
   geom_line(
     data = control_avg,
     aes(x = year, y = avg_esops, color = "Controls", group = 1),
-    size = 1.2
+    size = 2
   ) +
   geom_text(
     data = ~ dplyr::filter(.x, year == max(year)),
     aes(label = state),
     hjust = -0.1,
-    size = 3.5,              
+    size = 7.5,              
     color = "black"
   ) +
   scale_color_manual(
@@ -511,12 +515,12 @@ p2 <- ggplot(treated_df, aes(x = year, y = num_esops_form_5500, group = state)) 
   theme(
     panel.grid.major.x = element_blank(),
     panel.grid.minor.x = element_blank(),
-    panel.grid.major.y = element_line(color = "gray85", linewidth = 0.4),
-    panel.grid.minor.y = element_line(color = "gray92", linewidth = 0.3),
-    axis.text  = element_text(size = 13),
-    axis.title = element_text(size = 14),
-    legend.text = element_text(size = 14),
-    panel.border = element_rect(color = "black", fill = NA, linewidth = 0.6),
+    panel.grid.major.y = element_line(color = "gray70", linewidth = 0.4),
+    panel.grid.minor.y = element_line(color = "gray80", linewidth = 0.3),
+    axis.text  = element_text(size = 25),
+    axis.title = element_text(size = 25),
+    legend.text = element_text(size = 30),
+    panel.border = element_rect(color = "black", fill = NA, linewidth = 2),
     legend.position = "bottom",
     legend.box = "horizontal"
   ) +
@@ -525,6 +529,8 @@ p2 <- ggplot(treated_df, aes(x = year, y = num_esops_form_5500, group = state)) 
 )
 
 p2
+ggsave("p2_wide.png", plot = p2, width = 12, height = 8, units = "in", dpi = 300)
+
 ```
 
 ![](images/pretrends_treated_vs_controls.png)
@@ -721,6 +727,32 @@ att_table$CI_high <- round(att_table$CI_high, 3)
 att_table$p_value <- signif(att_table$p_value, 3)
 
 att_table
+```
+
+## Compute Quantifiable Change
+
+```{r}
+dyn <- aggte(att_all_union, type = "dynamic")  
+summary(dyn)
+
+att_table_pp <- data.frame(
+  event_time = dyn$egt,
+  att_pp     = dyn$att.egt,
+  se_pp      = dyn$se.egt
+) |> 
+  filter(event_time >= 1 & event_time <= 9) |> 
+  mutate(
+    ci95_lo_pp = att_pp - 1.96 * se_pp,
+    ci95_hi_pp = att_pp + 1.96 * se_pp
+  ) |> 
+  select(
+    event_time,
+    att_pp,
+    ci95_lo_pp,
+    ci95_hi_pp
+  )
+
+att_table_pp
 ```
 
 ## Figure 4: Trends in Union Density
@@ -937,6 +969,32 @@ att_table$p_value <- signif(att_table$p_value, 3)
 
 att_table
 
+```
+
+## Compute Quantifiable Changes
+
+```{r}
+dyn2 <- aggte(att_no_wisc, type = "dynamic")  
+summary(dyn2)
+
+att_table_pp2 <- data.frame(
+  event_time = dyn2$egt,
+  att_pp     = dyn2$att.egt,
+  se_pp      = dyn2$se.egt
+) |> 
+  filter(event_time >= 1 & event_time <= 9) |> 
+  mutate(
+    ci95_lo_pp = att_pp - 1.96 * se_pp,
+    ci95_hi_pp = att_pp + 1.96 * se_pp
+  ) |> 
+  select(
+    event_time,
+    att_pp,
+    ci95_lo_pp,
+    ci95_hi_pp
+  )
+
+att_table_pp2
 ```
 
 ## Figure 6: RTW on ESOPs
