@@ -40,7 +40,7 @@ This repository contains the data and replication code for a paper examining the
 
 
 
-## Additional Resources on Staggered Difference-in-Differences
+## Additional Resources on Staggered & Instrumented Difference-in-Differences
 
 For readers interested in modern staggered difference-in-differences approaches, the following resources provide helpful tutorials, documentation, and methodological background:
 
