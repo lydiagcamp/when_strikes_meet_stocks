@@ -53,8 +53,8 @@ For readers interested in modern staggered difference-in-differences approaches,
   https://bcallaway11.github.io/did/
 
 - **`twfeivdecomp` R package documentation**  
-   Instrumented Difference-in-Differences Decomposition 
-  https://cran.r-project.org/web/packages/twfeivdecomp/twfeivdecomp.pdf
+  Instrumented Difference-in-Differences Decomposition  
+  <https://cran.r-project.org/web/packages/twfeivdecomp/twfeivdecomp.pdf>
 
 - **Methodological reference**  
   Callaway, B., & Sant’Anna, P. H. C. (2021).  
