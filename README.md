@@ -17,8 +17,6 @@ This repository contains the data and replication code for a paper examining the
 
 ## Variables
 
-## Variables
-
 | Variable | Description |
 |--------|------------|
 | `state_id` | State identifier |
