@@ -7,7 +7,7 @@ This repository contains the data and replication code for a paper examining the
 
 ## Replication Materials
 - **Full Paper**  
-  [`Read the paper here!`](https://github.com/lydiagcamp/when_strikes_meet_stocks/raw/main/Final_Paper.pdf)
+  [`Read the paper here!`](https://lydiagcamp.github.io/when_strikes_meet_stocks/Final_Paper.pdf)
 
 - **Replication Code**  
   [`https://lydiagcamp.github.io/when_strikes_meet_stocks/`](https://lydiagcamp.github.io/when_strikes_meet_stocks/)
