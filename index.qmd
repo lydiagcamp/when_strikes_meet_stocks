@@ -59,8 +59,8 @@ state_year <- df |>
 ## Table 2: Descriptive Statistics
 
 ```{r}
+# select variables for descriptives
 options(scipen = 999)
-
 vars <- c(
   "num_esops_form_5500",
   "union_density",
@@ -73,6 +73,7 @@ vars <- c(
   "ln_num_firms"
 )
 
+# calculate N, mean,SD, min, and max
 descriptives <- state_year |> 
   summarise(across(all_of(vars),
                    list(N = ~sum(!is.na(.)),
@@ -84,9 +85,9 @@ descriptives <- state_year |>
   as.list() |> 
   stack() |> 
   tidyr::separate(ind, into = c("Variable","Statistic"), sep = "_(?=[^_]+$)") |>  
-  tidyr::pivot_wider(names_from = Statistic, values_from = values)
+  tidyr::pivot_wider(names_from = Statistic, values_from = values) # format table
 
-descriptives[-1] <- round(descriptives[-1], 3)
+descriptives[-1] <- round(descriptives[-1], 3) # round to the third decimal
 
 descriptives
 ```
@@ -94,6 +95,7 @@ descriptives
 ## Figure 2: Map of RTW Adoption
 
 ```{r}
+# set all years for RTW adoption
 rtw_years <- tribble(
   ~abbr, ~year,
   "AL", 1953, "AR", 1944, "AZ", 1946, "FL", 1944, "GA", 1947,
@@ -110,14 +112,16 @@ rtw_years <- tribble(
       labels = c("1940-49", "1950-59", "1960-79", "1980-99", "2000-09", "2010-19"),
       right = TRUE
     )
-  )
+  ) # create groups
 
+# set U.S. map
 states_poly <- us_map(regions = "states") |>
   st_as_sf(coords = c("x", "y"), crs = 4326, agr = "constant") |>
   group_by(abbr) |>
   summarise(geometry = st_union(st_geometry(.)), .groups = "drop") |>
   st_as_sf()
 
+# set colors for map
 blues <- c(
   "1940-49" = "#E8F1FF",
   "1950-59" = "#B3CDEB",
@@ -128,15 +132,16 @@ blues <- c(
 )
 
 sf_map <- states_poly |>
-  left_join(rtw_years, by = "abbr")
+  left_join(rtw_years, by = "abbr") # join data by state abbrev.
 
 labels_sf <- sf_map |>
   filter(!is.na(year)) |>
   mutate(
     label_pt    = st_point_on_surface(st_geometry(.)),
     label_color = if_else(decade == "2010-19", "white", "black")
-  )
+  ) # add year labels
 
+# plot map
 p <- ggplot(sf_map) +
   geom_sf(aes(fill = decade), color = "black", linewidth = 0.25) +
   geom_sf_text(
@@ -182,7 +187,7 @@ xm4 <- plm(
     lag(log(state_pop), 4) +
     lag(log(num_firms), 4),
   data   = state_year,
-  index  = c("state", "year"),
+  index  = c("state", "year"), # two-way FEs
   model  = "within",
   effect = "twoways"
 )
@@ -227,6 +232,7 @@ xm6 <- plm(
 ```{r}
 # Create OLS Model Summary
 
+# rename coefficients
 coef_map <- c(
   "lag(union_density, 4)"      = "Union density",
   "lag(union_density, 5)"      = "Union density",
@@ -262,12 +268,14 @@ coef_map <- c(
   
 )
 
+# set models to be included
 models <- list(
   "Lag 4 Years" = xm4,
   "Lag 5 Years" = xm5,
   "Lag 6 Years" = xm6
 )
 
+# add rows for FE
 fe_rows <- data.frame(
   term = c("State FE", "Year FE"),
   `Lag 4 Years` = c("✓", "✓"),
@@ -276,6 +284,7 @@ fe_rows <- data.frame(
   stringsAsFactors = FALSE
 )
 
+# create table
 modelsummary(
   models,
   coef_rename = coef_map,
@@ -338,10 +347,10 @@ did_data <- did_data |>
     rtw_year = ifelse(is.na(rtw_year), 0, rtw_year)
   )
 
-# Add ID
+# Add ID for state unique identifier
 did_data$id <- as.integer(factor(did_data$state))
 
-# Remove 1999
+# Remove 1999 (again for this data)
 did_data2 <- did_data |> 
   filter(year !=1999)
 ```
@@ -394,6 +403,7 @@ balance_data_pre <- balance_data |>
       (treated == 0)
   )
 
+# select variables for the balance test
 balance_vars <- c(
   "ln_state_pop",
   "manufact_per",
@@ -403,7 +413,7 @@ balance_vars <- c(
   "left_wing"
 )
 
-# means / sds / Ns by treated vs control + differences
+# means, SDs, and Ns by treated vs control + differences
 balance_means <- balance_data_pre |> 
   select(treated, all_of(balance_vars)) |> 
   pivot_longer(
@@ -437,6 +447,7 @@ diff_tests <- lapply(balance_vars, function(v) {
 }) |> 
   bind_rows()
 
+# make a table for the balance test
 table3 <- balance_means |> 
   left_join(diff_tests, by = "variable") |> 
   mutate(
@@ -450,7 +461,7 @@ table3 <- balance_means |>
   transmute(
     Variable   = variable,
     Treated    = round(mean_1, 3),
-    Control    = round(mean_0, 3),
+    Control    = round(mean_0, 3), # round to third decimal point
     Difference = paste0(round(diff, 3), stars),
     N_Treated  = n_1,
     N_Control  = n_0
@@ -462,11 +473,14 @@ table3
 ## Figure 3: Parallel Trends
 
 ```{r}
+# define treated states
 treated_states <- c("MI", "WI", "IN", "KY", "WV")
 
+# make separate treated dataset to identify average
 treated_df <- did_data2 |> 
   filter(state %in% treated_states)
 
+# find the average of control states (non-adopters)
 control_avg <- did_data2 |> 
   filter(!state %in% treated_states) |> 
   group_by(year) |> 
@@ -475,6 +489,7 @@ control_avg <- did_data2 |>
     .groups = "drop"
   )
 
+# make the plot
 p2 <- ggplot(treated_df, aes(x = year, y = num_esops_form_5500, group = state)) +
   geom_line(
     data = treated_df |> 
@@ -493,7 +508,7 @@ p2 <- ggplot(treated_df, aes(x = year, y = num_esops_form_5500, group = state)) 
     size = 2
   ) +
   geom_text(
-    data = ~ dplyr::filter(.x, year == max(year)),
+    data = ~ dplyr::filter(.x, year == max(year)), # label state abbrevs.
     aes(label = state),
     hjust = -0.1,
     size = 7.5,              
@@ -529,7 +544,8 @@ p2 <- ggplot(treated_df, aes(x = year, y = num_esops_form_5500, group = state)) 
 )
 
 p2
-ggsave("p2_wide.png", plot = p2, width = 12, height = 8, units = "in", dpi = 300)
+# save as PNG
+#ggsave("p2_wide.png", plot = p2, width = 12, height = 8, units = "in", dpi = 300) 
 
 ```
 
@@ -551,8 +567,10 @@ att_all <- att_gt(
   data = did_data2
 )
 
+# run dynamic model
 att_event <- aggte(att_all, type = "dynamic")
 
+# extract values of interest
 egt <- att_event$egt
 att <- att_event$att.egt
 
@@ -587,8 +605,10 @@ att_no_wisc <- att_gt(
   data = did_data_no_wisconsin
 )
 
+# dynamic model
 att_event <- aggte(att_no_wisc, type = "dynamic")
 
+# extract coefficients
 egt <- att_event$egt
 att <- att_event$att.egt
 
@@ -612,6 +632,7 @@ c(Wald = W, df = df, p_value = pval)
 ## Visualize Adoption
 
 ```{r}
+# limit to 2008 for visualization's sake
 df <- did_data2 |>
   filter(year >= 2008) |>
   group_by(state) |>
@@ -628,7 +649,7 @@ df_plot <- df |>
     status = ifelse(rtw == 1, "Treated", "Not treated")
   ) 
 
-
+# make a nice ggplot of adoption
 adoption <- ggplot(df_plot, aes(x = year, y = state_ordered, fill = status)) +
   geom_tile() +
   scale_fill_manual(
@@ -670,7 +691,7 @@ att_all_union <- att_gt(yname = "union_density",
 att_overall2 <- aggte(
   att_all_union,
   type = "simple"
-)
+) # run simple ATT 
 
 # Without Wisconsin
 att_no_wisc_union <- att_gt(yname = "union_density",
@@ -684,21 +705,22 @@ att_no_wisc_union <- att_gt(yname = "union_density",
 att_overall_no_wisc2 <- aggte(
   att_no_wisc_union,
   type = "simple"
-)
+) # run simple ATT 
 ```
 
 ## ATT Table 1
 
 ```{r}
+# Create function to extract coefficients
 extract_att <- function(x) {
   att <- x$overall.att
   se  <- x$overall.se
-  ci_l <- att - 1.96 * se
+  ci_l <- att - 1.96 * se # 95% CIs
   ci_u <- att + 1.96 * se
 
   z <- att / se
   p <- 2 * (1 - pnorm(abs(z)))
-  stars <- ifelse(p < 0.001, "***",
+  stars <- ifelse(p < 0.001, "***", # set significance levels
            ifelse(p < 0.01,  "**",
            ifelse(p < 0.05,  "*",
            ifelse(p < 0.10,  "+", ""))))
@@ -713,6 +735,7 @@ extract_att <- function(x) {
   )
 }
 
+# extract coefficients
 r_all  <- extract_att(att_overall2);         r_all$Sample  <- "All states"
 r_nowi <- extract_att(att_overall_no_wisc2); r_nowi$Sample <- "Excluding Wisconsin"
 
@@ -726,15 +749,17 @@ att_table$CI_low  <- round(att_table$CI_low, 3)
 att_table$CI_high <- round(att_table$CI_high, 3)
 att_table$p_value <- signif(att_table$p_value, 3)
 
-att_table
+att_table # table
 ```
 
 ## Compute Quantifiable Change
 
 ```{r}
+# run dynamic ATT 
 dyn <- aggte(att_all_union, type = "dynamic")  
 summary(dyn)
 
+# Create table to see the effect by year
 att_table_pp <- data.frame(
   event_time = dyn$egt,
   att_pp     = dyn$att.egt,
@@ -742,7 +767,7 @@ att_table_pp <- data.frame(
 ) |> 
   filter(event_time >= 1 & event_time <= 9) |> 
   mutate(
-    ci95_lo_pp = att_pp - 1.96 * se_pp,
+    ci95_lo_pp = att_pp - 1.96 * se_pp, # 95% CI
     ci95_hi_pp = att_pp + 1.96 * se_pp
   ) |> 
   select(
@@ -752,13 +777,13 @@ att_table_pp <- data.frame(
     ci95_hi_pp
   )
 
-att_table_pp
+att_table_pp # table
 ```
 
 ## Figure 4: Trends in Union Density
 
 ```{r}
-
+# set timing year again 
 rtw_timing <- tribble(
   ~state, ~rtw_year2,
   "AL", 1953, "AR", 1944, "AZ", 1946, "FL", 1944, "GA", 1947,
@@ -770,6 +795,7 @@ rtw_timing <- tribble(
   "WY", 1963, "MI", 2012
 )
 
+# define each group by "never RTW", "always RTW", or "RTW switchers"
 state_year_classified <- df |>
   full_join(rtw_timing, by = "state") |>
   mutate(
@@ -780,7 +806,7 @@ state_year_classified <- df |>
     )
   )
 
-
+# make dataset 
 plot_df <- state_year_classified |>
   mutate(
     rtw_group = case_when(
@@ -797,8 +823,9 @@ plot_df <- state_year_classified |>
   )
 
 plot_df <- plot_df |> 
-  filter(year !=1999)
+  filter(year !=1999) # remove 1999 again
 
+# make plot!
 p_union <- ggplot(
   plot_df,
   aes(x = year, y = union_density, color = rtw_group, linetype = rtw_group)
@@ -807,7 +834,7 @@ p_union <- ggplot(
 
   scale_color_manual(
     values = c(
-      "Always RTW"    = "grey40",
+      "Always RTW"    = "grey40", 
       "RTW-Switchers" = "blue",
       "Never RTW"     = "red"
     )
@@ -845,7 +872,7 @@ p_union <- ggplot(
     legend.text = element_text(size = 14)
   ) 
 
-p_union
+p_union # plot of changes in union density by group
 ```
 
 ![](images/union_density-01.png)
@@ -853,6 +880,7 @@ p_union
 ## Figure 5: RTW on Union Density
 
 ```{r}
+# run model (ATT dynamic) 
 att_aggregate_no_wisc_union <- aggte(
   att_no_wisc_union,
   type = "dynamic",
@@ -860,6 +888,7 @@ att_aggregate_no_wisc_union <- aggte(
   max_e = 10
 )
 
+# make a plot of the CIs and point estimates for the effect of RTW on union density
 ggdid(att_aggregate_no_wisc_union) +
   geom_hline(
     yintercept = 0,
@@ -875,7 +904,7 @@ ggdid(att_aggregate_no_wisc_union) +
   ) +
   coord_cartesian(ylim = c(-5, 5)) +
   scale_color_manual(
-    values = c("grey50", "blue"),
+    values = c("grey50", "blue"), # blue = post treatment
     labels = c("Pre", "Post")
   ) +
   scale_fill_manual(
@@ -920,6 +949,7 @@ att_all <- att_gt(yname = "num_esops_form_5500",
              ln_real_median_in_l1 + ln_num_firms_l1, 
                         data = did_data2)
 
+# run ATT model simple
 att_overall <- aggte(
   att_all,
   type = "simple"
@@ -934,6 +964,7 @@ att_no_wisc <- att_gt(yname = "num_esops_form_5500",
              real_median_in_l1 + ln_num_firms_l1,
                         data = did_data_no_wisconsin)
 
+# run ATT model simple
 att_overall_no_wisc <- aggte(
   att_no_wisc,
   type = "simple"
@@ -943,7 +974,7 @@ att_overall_no_wisc <- aggte(
 ## ATT Table 2
 
 ```{r}
-# Models
+# Models (Simple)
 att_overall <- aggte(
   att_all,
   type = "simple"
@@ -954,6 +985,7 @@ att_overall_no_wisc <- aggte(
   type = "simple"
 )
 
+# Extract coefficients
 r_all  <- extract_att(att_overall);         r_all$Sample  <- "All states"
 r_nowi <- extract_att(att_overall_no_wisc); r_nowi$Sample <- "Excluding Wisconsin"
 
@@ -967,14 +999,15 @@ att_table$CI_low  <- round(att_table$CI_low, 3)
 att_table$CI_high <- round(att_table$CI_high, 3)
 att_table$p_value <- signif(att_table$p_value, 3)
 
-att_table
+att_table # table of overall ATT 
 
 ```
 
 ## Compute Quantifiable Changes
 
 ```{r}
-dyn2 <- aggte(att_no_wisc, type = "dynamic")  
+# disaggregate the effect by year and statistical significance
+dyn2 <- aggte(att_no_wisc, type = "dynamic")  # dynamic model
 summary(dyn2)
 
 att_table_pp2 <- data.frame(
@@ -982,9 +1015,9 @@ att_table_pp2 <- data.frame(
   att_pp     = dyn2$att.egt,
   se_pp      = dyn2$se.egt
 ) |> 
-  filter(event_time >= 1 & event_time <= 9) |> 
+  filter(event_time >= 1 & event_time <= 9) |> # 9 is the last year I have in the post-treatment period
   mutate(
-    ci95_lo_pp = att_pp - 1.96 * se_pp,
+    ci95_lo_pp = att_pp - 1.96 * se_pp, # set 95% CI
     ci95_hi_pp = att_pp + 1.96 * se_pp
   ) |> 
   select(
@@ -1000,14 +1033,15 @@ att_table_pp2
 ## Figure 6: RTW on ESOPs
 
 ```{r}
-
+# visualize the effects computed above
 att_aggregate_no_wisc <- aggte(
   att_no_wisc,
   type = "dynamic",
   min_e = -10,
   max_e = 10
-)
+) # dynamic model
 
+# a nice graph of the effect of RTW on ESOP count
 ggdid(att_aggregate_no_wisc) +
   geom_hline(
     yintercept = 0,
@@ -1023,7 +1057,7 @@ ggdid(att_aggregate_no_wisc) +
   ) +
   coord_cartesian(ylim = c(-60, 60)) +
   scale_color_manual(
-    values = c("grey50", "red"),
+    values = c("grey50", "red"), # red = post
     labels = c("Pre", "Post")
   ) +
   scale_fill_manual(
@@ -1066,7 +1100,7 @@ att_all_control <- att_gt(yname = "num_esops_form_5500",
                         idname = "id",
                         gname = "rtw_year",
                         xformla = ~ manufact_per_l1 +
-             ln_real_median_in_l1 + ln_num_firms_l1 + union_density_l1, 
+             ln_real_median_in_l1 + ln_num_firms_l1 + union_density_l1, # CONTROLLING for union density
                         data = did_data2)
 
 # Without Wisconsin
@@ -1082,6 +1116,7 @@ att_no_wisc_control <- att_gt(yname = "num_esops_form_5500",
 ## ATT Table 3
 
 ```{r}
+# run simple ATT models
 att_overall2 <- aggte(
   att_all_control,
   type = "simple"
@@ -1091,12 +1126,13 @@ att_overall_no_wisc2 <- aggte(
   type = "simple"
 )
 
+# extract coefficients
 r_all  <- extract_att(att_overall2);         r_all$Sample  <- "All states"
 r_nowi <- extract_att(att_overall_no_wisc2); r_nowi$Sample <- "Excluding Wisconsin"
 
 att_table <- rbind(r_all, r_nowi)
 
-# Make it pretty
+# make it pretty
 att_table <- att_table[, c("Sample","ATT","SE","CI_low","CI_high","stars","p_value")]
 att_table$ATT  <- round(att_table$ATT, 3)
 att_table$SE   <- round(att_table$SE, 3)
@@ -1104,7 +1140,7 @@ att_table$CI_low  <- round(att_table$CI_low, 3)
 att_table$CI_high <- round(att_table$CI_high, 3)
 att_table$p_value <- signif(att_table$p_value, 3)
 
-att_table
+att_table # table
 ```
 
 # Robustness Checks
@@ -1128,6 +1164,7 @@ att_ind <- att_gt(yname = "num_esops_form_5500",
              ln_real_median_in_l1 + ln_num_firms_l1, 
                         data = indiana)
 
+# ATT simple
 att_indiana <- aggte(
   att_ind,
   type = "simple"
@@ -1142,6 +1179,7 @@ att_ind2 <- att_gt(yname = "union_density",
              ln_real_median_in_l1 + ln_num_firms_l1, 
                         data = indiana)
 
+# ATT simple
 att_indiana2 <- aggte(
   att_ind2,
   type = "simple"
@@ -1164,6 +1202,7 @@ att_mich <- att_gt(yname = "num_esops_form_5500",
                         xformla = ~ manufact_per_l1 +
              ln_real_median_in_l1 + ln_num_firms_l1,
                         data = michigan)
+# ATT simple
 att_michigan <- aggte(
   att_mich,
   type = "simple"
@@ -1177,6 +1216,7 @@ att_mich2 <- att_gt(yname = "union_density",
                         xformla = ~ manufact_per_l1 +
              ln_real_median_in_l1 + ln_num_firms_l1, 
                         data = michigan)
+# ATT simple
 att_michigan2 <- aggte(
   att_mich2,
   type = "simple"
@@ -1199,6 +1239,7 @@ att_wv <- att_gt(yname = "num_esops_form_5500",
                         xformla = ~ manufact_per_l1 +
              ln_real_median_in_l1 + ln_num_firms_l1, 
                         data = west_virg)
+# ATT simple
 att_west_v <- aggte(
   att_wv,
   type = "simple"
@@ -1212,6 +1253,7 @@ att_wv2 <- att_gt(yname = "union_density",
                         xformla = ~ manufact_per_l1 +
              ln_real_median_in_l1 + ln_num_firms_l1, 
                         data = west_virg)
+# ATT simple
 att_west_v2 <- aggte(
   att_wv2,
   type = "simple"
@@ -1233,6 +1275,7 @@ att_kentuc <- att_gt(yname = "num_esops_form_5500",
                         xformla = ~ manufact_per_l1 +
              ln_real_median_in_l1 + ln_num_firms_l1, 
                         data = kentucky)
+# ATT simple
 att_kentucky <- aggte(
   att_kentuc,
   type = "simple"
@@ -1246,6 +1289,7 @@ att_kentuc2 <- att_gt(yname = "union_density",
                         xformla = ~ manufact_per_l1 +
              ln_real_median_in_l1 + ln_num_firms_l1, 
                         data = kentucky)
+# ATT simple
 att_kentucky2 <- aggte(
   att_kentuc2,
   type = "simple"
@@ -1268,6 +1312,7 @@ att_wisc <- att_gt(yname = "num_esops_form_5500",
                         xformla = ~ manufact_per_l1 +
              ln_real_median_in_l1 + ln_num_firms_l1, 
                         data = wisc)
+# ATT simple
 att_wisconsin <- aggte(
   att_wisc,
   type = "simple"
@@ -1281,6 +1326,7 @@ att_wisc2 <- att_gt(yname = "union_density",
                         xformla = ~ manufact_per_l1 +
              ln_real_median_in_l1 + ln_num_firms_l1,
                         data = wisc)
+# ATT simple
 att_wisconsin2 <- aggte(
   att_wisc2,
   type = "simple"
@@ -1290,6 +1336,7 @@ att_wisconsin2 <- aggte(
 ## ATT Table: Disaggregated by State
 
 ```{r}
+# extract coefficients by state
 r_bench <- extract
 r_ind  <- extract_att(att_indiana);         r_ind$Sample  <- "Indiana"
 r_mich <- extract_att(att_michigan); r_mich$Sample <- "Michigan"
@@ -1307,5 +1354,5 @@ att_table_states$CI_low  <- round(att_table_states$CI_low, 3)
 att_table_states$CI_high <- round(att_table_states$CI_high, 3)
 att_table_states$p_value <- signif(att_table_states$p_value, 3)
 
-att_table_states
+att_table_states # final table
 ```
